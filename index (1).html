@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>INVESTHUB.SITE</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef1f4;--ink:#162033;--mute:#5b667a;--line:#d5dbe4;--card:#fff;--acc:#2745d8;--good:#12805c;--warn:#b26a00}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10151f;--ink:#e6eaf2;--mute:#97a3b8;--line:#263045;--card:#171e2c;--acc:#8ea2ff;--good:#4fd1a1;--warn:#f0b15a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#10151f;--ink:#e6eaf2;--mute:#97a3b8;--line:#263045;--card:#171e2c;--acc:#8ea2ff;--good:#4fd1a1;--warn:#f0b15a;color-scheme:dark}
+:root[data-theme="light"]{color-scheme:light}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}.top button{padding:6px 10px;font-size:13px}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "IBM Plex Sans",system-ui,sans-serif}
+main{max-width:720px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top,0px)) 14px calc(40px + env(safe-area-inset-bottom,0px))}
+h1{font-size:20px;margin:0 0 2px}.sub{color:var(--mute);margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:12px}
+.load{border-left:5px solid var(--acc)}
+.load b{display:block;font-size:21px;margin:3px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+label{display:block;font-size:12px;color:var(--mute);margin-bottom:3px}
+input,select{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px}
+button{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:10px 14px}
+button.go{background:var(--acc);color:var(--bg);border-color:var(--acc);font-weight:600;width:100%;padding:13px}
+button.on{background:var(--good);color:#fff;border-color:var(--good)}
+#alert{display:none;background:var(--good);color:#fff;border-radius:8px;padding:12px 14px;margin-bottom:12px;font-weight:600;cursor:pointer}
+.wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:600px}
+th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}th{color:var(--mute);font-size:12px;font-weight:600}
+.good{color:var(--good);font-weight:600}.warn{color:var(--warn);font-weight:600}.neg{color:var(--mute)}
+.note{color:var(--mute);font-size:13px}.row{display:flex;gap:8px;align-items:center;margin-bottom:10px}.row select{flex:1}
+.dig .row{margin-bottom:12px}.dig .row select{flex:1}
+.lastw{text-align:center;margin-bottom:12px}.lastw small{display:block;color:var(--mute)}
+.c{border:3px solid var(--line);border-radius:50%;text-align:center;aspect-ratio:1;display:flex;flex-direction:column;justify-content:center;position:relative}
+.c b{font-size:22px;line-height:1.1}.c span{font-size:12px;color:var(--mute);font-variant-numeric:tabular-nums}
+.big{width:84px;height:84px;margin:4px auto 0;font-size:40px;font-weight:600;border-color:var(--mute)}
+.circles{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.hi{border-color:var(--good)}.hi2{border-color:var(--acc)}.lo{border-color:#c0392b}.lo2{border-color:var(--warn)}
+.cur::after{content:"";position:absolute;bottom:-9px;left:50%;width:22px;height:5px;margin-left:-11px;border-radius:3px;background:#c0392b}
+.c.w{background:color-mix(in srgb,var(--good) 13%,transparent)}
+@keyframes fl{from{box-shadow:0 0 0 3px var(--good)}to{box-shadow:0 0 0 0 transparent}}
+.flash{animation:fl 1.6s ease-out}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--mute);margin-top:14px}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><h1>INVESTHUB.SITE</h1><button id="th">Theme: Auto</button></div>
+<p class="sub">Watches the volatility and jump indices. When a signal appears, tap once to download a DBot file already set to that market and side.</p>
+<div id="alert"></div>
+
+<div class="card load">
+  <small id="ltxt" class="note">Connecting to Deriv...</small>
+  <b id="lname">-</b>
+  <button class="go" id="dl" disabled>Download bot</button>
+  <label class="note" style="display:flex;gap:8px;align-items:center;margin:12px 0 0"><input type="checkbox" id="auto" checked style="width:auto"> Download the bot automatically the moment a signal locks</label>
+  <label class="note" style="display:flex;gap:8px;align-items:center;margin:8px 0 0"><input type="checkbox" id="rck" style="width:auto"> Bot keeps re-checking the signal while it runs (off = it just follows its entry steps)</label>
+  <a href="https://dbot.deriv.com" target="_blank" rel="noopener" style="display:inline-block;margin-top:8px">Open Deriv Bot</a>
+  <p class="note" style="margin:10px 0 0" id="how">In Deriv Bot: Bot Builder, Import, choose the newest file, Run.</p>
+</div>
+
+<div class="card">
+  <div class="row"><label style="margin:0">I'm trading on</label><select id="curm"></select><button id="snd">Sound off</button></div>
+  <div class="row"><label style="margin:0">Bot</label><select id="bt"><option value="ou">PROFIT TRACKER (Over / Under)</option><option value="eo">THE GUARDIAN (Even / Odd)</option><option value="mt">SIZZLERS (Matches on the most touched digit)</option><option value="ai">THE AUTO TRADE AI (Over 4 / Under 5)</option></select><b id="mt" style="font-size:13px"></b></div>
+  <div class="row"><label style="margin:0">1s &amp; Jump markets</label><select id="m1s"><option value="wait">Wait 2 ticks before the trade</option><option value="dur2">Use 2-tick contracts</option><option value="off">No change</option></select></div>
+  <div class="row"><label style="margin:0">THE GUARDIAN entry</label><select id="eorun"><option value="2">After 2 losing-side digits in a row</option><option value="3">After 3 losing-side digits in a row</option></select></div>
+  <div class="row"><label style="margin:0">PROFIT TRACKER entry</label><select id="ent"><option value="opp">Opposite side: Over 0-2, Under 7-9</option><option value="win">Winning side: Over 3-8, Under 1-6</option></select></div>
+  <div class="grid">
+    <div><label>Your amount</label><input id="amount" inputmode="decimal" placeholder="e.g. 200"></div>
+    <div><label>Stake (5% of amount)</label><input id="stake" inputmode="decimal" value="1" readonly></div>
+    <div><label>Martingale x</label><input id="mult" inputmode="decimal" value="3"></div>
+    <div><label>Losing digit rise limit (points)</label><input id="rise" inputmode="decimal" value="1"></div>
+    <div><label>AUTO TRADE AI: min side share % (800 ticks)</label><input id="aimin" inputmode="decimal" value="53"></div>
+    <div><label>SIZZLERS: min share % (1000 ticks)</label><input id="mtmin" inputmode="decimal" value="11"></div>
+    <div><label>SIZZLERS: min rise (points)</label><input id="mtrise" inputmode="decimal" value="2"></div>
+    <div><label>Cooldown after a loss (seconds)</label><input id="losscool" inputmode="numeric" value="20"></div>
+    <div><label>Max losses in a row (0 = off)</label><input id="maxl" inputmode="numeric" value="0"></div>
+    <div><label>Take profit (5% of amount)</label><input id="tp" inputmode="decimal" value="10" readonly></div>
+    <div><label>Stop loss (20% of amount)</label><input id="sl" inputmode="decimal" value="10" readonly></div>
+    <div><label>Losses so far (recovery)</label><input id="rec" inputmode="numeric" value="0"></div>
+  </div>
+  <p class="note" style="margin:10px 0 0">After a loss, set "Losses so far" to your current loss count. The next file starts on the recovery stake.</p>
+</div>
+
+<div class="card dig" id="dig">
+  <div class="row"><select id="am"></select><select id="an"><option value="100">100 ticks</option><option value="500">500 ticks</option><option value="1000" selected>1000 ticks</option></select></div>
+  <div id="dtitle" style="font-weight:600;margin:0 0 10px"></div>
+  <div class="lastw"><small>Last digit</small><div class="c big" id="ld">-</div></div>
+  <div class="circles" id="circles"></div>
+  <div class="legend"><span style="color:var(--good)">&#9679; highest</span><span style="color:var(--acc)">&#9679; 2nd highest</span><span style="color:var(--warn)">&#9679; 2nd lowest</span><span style="color:#c0392b">&#9679; lowest</span></div>
+  <p class="note" id="ou" style="margin:10px 0 0"></p>
+</div>
+
+<div class="card wrap"><table>
+  <thead><tr><th>Market</th><th>Side</th><th>Win % (100)</th><th>Signal</th><th>Growth</th><th>Losing digits</th><th>Winning digits</th></tr></thead>
+  <tbody id="rows"></tbody>
+</table></div>
+<p class="note">A signal is Strong when all three digit rules hold: every losing digit (0, 1, 2 for Over 2; 7, 8, 9 for Under 7; the five digits of the other kind for THE GUARDIAN) is below 10% over the last 1000 ticks; none of them is rising faster than the rise limit over the last 100 ticks; and at least 3 of the winning digits are at 10.5% or more. Two rules met is Average, one is Weak. The Win % column is the last-100-tick win rate, shown for information. THE GUARDIAN has its own rules: the three most appearing digits must all be winning-side digits at 10.5% or more, and the five losing-side digits must each be below 10.3% with at least 3 of them below 10%. The rise limit does not apply to THE GUARDIAN.</p>
+<p class="note">Bots. <b>PROFIT TRACKER</b> (Over/Under): Over 2 waits for its trigger digit (the least appearing of 1 and 2 over the last 1000 ticks), then an entry digit, then trades until take profit or stop loss. Under 7 waits for its trigger digit (the least appearing of 7 and 8), then an entry digit, then trades. The entry digits follow the PROFIT TRACKER entry setting: Opposite side (Over 0 to 2, Under 7 to 9) or Winning side (Over 3 to 8, Under 1 to 6). <b>THE GUARDIAN</b> (Even/Odd): it waits for the least appearing digit on the winning side to be hit, then for 2 (or 3, see the THE GUARDIAN entry setting) losing-side digits in a row, then for one winning-side confirmation digit, and then trades the winning side until take profit or stop loss. <b>SIZZLERS</b> (Matches): a signal appears when one digit is the most touched over the last 1000 ticks (at least the min share, default 11%), also leads the last 100 ticks, and is gaining share by the min rise (default 2 points). The bot is made for that digit: once the cursor touches it, it buys Matches on it on every tick until take profit or stop loss, with a fixed stake (no martingale and no cooldown). It reads past frequency and trend only. Digits are independent, so this does not predict the next digit, and a Matches win pays roughly 9 times the stake but only comes about 1 in 10 ticks.  <b>THE AUTO TRADE AI</b> (Over 4 / Under 5): it counts which side the cursor touched most in the last 800 ticks (digits 5 to 9 give Over 4, digits 0 to 4 give Under 5; a signal needs at least the min side share, default 53%). The bot enters a trade on that side each time 3 consecutive losing-side digits appear (digits 0 to 4 when it trades Over 4, digits 5 to 9 when it trades Under 5), for the next 200 ticks (800 read plus 200 traded makes 1000), then reads the latest 800 ticks again and picks the side again. It uses the multiplier after a loss but no loss cooldown. The side that attracted the cursor in the past does not make it more likely next, since each digit is independent. After a loss PROFIT TRACKER and THE GUARDIAN take a cooldown (default 20 seconds), then start their entry steps again with the multiplied stake. On the 1-second volatilities and the Jump indices, a bot waits 2 ticks after its entry before trading (or uses 2-tick contracts, see the 1s &amp; Jump setting).</p>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+/* light / dark / auto (follows the phone) */
+const THEMES=["auto","light","dark"];let theme="auto";
+try{theme=localStorage.getItem("sl_theme")||"auto"}catch(e){}
+function applyTheme(){const r=document.documentElement;if(r){if(theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",theme)}$("th").textContent="Theme: "+theme[0].toUpperCase()+theme.slice(1)}
+$("th").onclick=()=>{theme=THEMES[(THEMES.indexOf(theme)+1)%3];try{localStorage.setItem("sl_theme",theme)}catch(e){}applyTheme()};
+applyTheme();
+const MK=[["R_10","Volatility 10"],["R_25","Volatility 25"],["R_50","Volatility 50"],["R_75","Volatility 75"],["R_100","Volatility 100"],
+["1HZ10V","Volatility 10 (1s)"],["1HZ15V","Volatility 15 (1s)"],["1HZ25V","Volatility 25 (1s)"],["1HZ30V","Volatility 30 (1s)"],["1HZ50V","Volatility 50 (1s)"],
+["1HZ75V","Volatility 75 (1s)"],["1HZ90V","Volatility 90 (1s)"],["1HZ100V","Volatility 100 (1s)"],["1HZ150V","Volatility 150 (1s)"],["1HZ250V","Volatility 250 (1s)"],
+["JD10","Jump 10"],["JD25","Jump 25"],["JD50","Jump 50"],["JD75","Jump 75"]];
+const names=Object.fromEntries(MK),ids=MK.map(m=>m[0]),D={};ids.forEach(s=>D[s]=[]);
+const PIP={R_10:3,R_25:3,R_50:4,R_75:4,R_100:2};
+$("curm").innerHTML=MK.map(([s,n])=>`<option value="${s}">${n}</option>`).join("");
+const K=["mult","maxl","curm","amount","rise","bt","ent","eorun","losscool","m1s","mtmin","mtrise","aimin"];
+try{$("auto").checked=localStorage.getItem("sl_auto")!=="0";$("auto").onchange=()=>localStorage.setItem("sl_auto",$("auto").checked?"1":"0");$("rck").checked=localStorage.getItem("sl_rck")==="1";$("rck").onchange=()=>localStorage.setItem("sl_rck",$("rck").checked?"1":"0");K.forEach(k=>{const v=localStorage.getItem("sl_"+k);if(v)$(k).value=v});K.forEach(k=>$(k).onchange=()=>localStorage.setItem("sl_"+k,$(k).value))}catch(e){}
+const num=k=>Number($(k).value);
+/* risk management: stake = 5% of the amount, take profit = 5%, stop loss = 20% */
+function recalc(){const a=Number($("amount").value);if(a>0){const r=v=>String(Math.round(v*100)/100);$("stake").value=r(a*0.05);$("tp").value=r(a*0.05);$("sl").value=r(a*0.20)}}
+recalc();$("amount").oninput=()=>{recalc();try{localStorage.setItem("sl_amount",$("amount").value)}catch(e){}};
+/* ---------- sound ---------- */
+let soundOn=false,actx;
+function chime(){
+  if(!soundOn||!actx)return;
+  const n=actx.currentTime;
+  [[988,1],[1976,.22]].forEach(([f,v])=>{const o=actx.createOscillator(),g=actx.createGain();
+    o.type="sine";o.frequency.value=f;o.connect(g);g.connect(actx.destination);
+    g.gain.setValueAtTime(.0001,n);g.gain.exponentialRampToValueAtTime(.4*v,n+.01);g.gain.exponentialRampToValueAtTime(.0001,n+1.3);o.start(n);o.stop(n+1.4)});
+}
+$("snd").onclick=function(){soundOn=!soundOn;this.textContent=soundOn?"Sound on":"Sound off";this.classList.toggle("on",soundOn);
+  if(soundOn){actx=actx||new(window.AudioContext||window.webkitAudioContext)();actx.resume();chime()}};
+/* ---------- market data ---------- */
+const digit=(p,pip)=>Number(Number(p).toFixed(pip).slice(-1));
+const pct=(a,f)=>a.length?100*a.filter(f).length/a.length:0;
+const botType=()=>{const v=$("bt")&&$("bt").value;return v==="eo"||v==="mt"||v==="ai"?v:"ou"};
+function stats(s){
+  const a=D[s];if(a.length<100)return null;const r=a.slice(-100);
+  const cnt=Array(10).fill(0);a.forEach(d=>cnt[d]++);
+  const mk=(side,bar,win,lose,wd,min,kind)=>{
+    const rec=pct(r,win),all=pct(a,win),g=rec-all,lossMax=Math.max(...lose.map(d=>100*cnt[d]/a.length));
+    // each losing digit: its recent 100-tick share minus its 1000-tick share (flat or falling is fine, rising is not)
+    const lossGrow=Math.max(...lose.map(d=>pct(r,x=>x===d)-100*cnt[d]/a.length));
+    // winning digits holding a share of 10.5% or more over the window
+    const isEo=kind==="eo",ord=[...Array(10).keys()].sort((p,q)=>cnt[q]-cnt[p]||p-q),t3=ord.slice(0,3);
+    // Even/Odd: the three most appearing digits must all be winning-side digits at 10.5%+; losing digits all under 10.3%, at least 3 of them under 10%
+    const t3win=t3.filter(d=>wd.includes(d)&&100*cnt[d]/a.length>=10.5).length;
+    const below10=lose.filter(d=>100*cnt[d]/a.length<10).length;
+    const winUp=isEo?t3win:wd.filter(d=>100*cnt[d]/a.length>=10.5).length;
+    const parts=isEo?[lossMax<10.3&&below10>=3,true,t3win===3]:[lossMax<10,lossGrow<=tolOf(),winUp>=3];
+    return{kind,side,bar,rec,all,g,lossMax,lossGrow,winUp,wd,nw:wd.length,min,parts,top3:t3.join(", "),ok:a.length>=500&&parts.every(Boolean)};
+  };
+  if(botType()==="ai"){
+    // the side (Over 4 = digits 5-9, Under 5 = digits 0-4) that attracted the cursor most in the last 800 ticks wins
+    const w=a.slice(-800),hi=w.filter(d=>d>=5).length,lo=w.length-hi,hiSide=hi>lo;
+    const share=100*Math.max(hi,lo)/Math.max(1,w.length),recSide=r.filter(d=>hiSide?d>=5:d<=4).length;
+    const parts=[share>=aiMin(),recSide>=50,a.length>=800];
+    return{s,kind:"ai",bar:hiSide?4:5,side:hiSide?"Over 4":"Under 5",rec:recSide,all:share,g:share-50,lossMax:share,lossGrow:share-50,winUp:3,wd:[],nw:0,min:0,parts,hi,lo,ok:parts.every(Boolean)};
+  }
+  if(botType()==="mt"){
+    // Matches: the most touched digit over 1000 ticks, which must also lead the last 100 ticks and be gaining share
+    const ordA=[...Array(10).keys()].sort((p,q)=>cnt[q]-cnt[p]||p-q),D0=ordA[0],cr=Array(10).fill(0);r.forEach(d=>cr[d]++);
+    const share=100*cnt[D0]/a.length,g=cr[D0]-share,recTop=cr[D0]>=Math.max(...cr);
+    const parts=[share>=mtMin(),g>=mtRise(),recTop];
+    return{s,kind:"mt",side:"Matches "+D0,digit:D0,rec:cr[D0],all:share,g,lossMax:share,lossGrow:g,winUp:3,wd:[D0],nw:1,min:0,parts,recTop,ok:a.length>=500&&parts.every(Boolean)};
+  }
+  const EV=[0,2,4,6,8],OD=[1,3,5,7,9];
+  const [o,u]=botType()==="eo"
+    ?[mk("Even",undefined,d=>d%2===0,OD,EV,0,"eo"),mk("Odd",undefined,d=>d%2===1,EV,OD,0,"eo")]
+    :[mk("Over 2",2,d=>d>2,[0,1,2],[3,4,5,6,7,8,9],0,"ou"),mk("Under 7",7,d=>d<7,[7,8,9],[0,1,2,3,4,5,6],0,"ou")];
+  const sc=x=>isStrong(x)?1:0;
+  const best=sc(o)!==sc(u)?(sc(o)?o:u):((o.rec>u.rec||(o.rec===u.rec&&o.g>=u.g))?o:u);
+  return{s,...best};
+}
+const aiMin=()=>{const e=$("aimin"),v=Number(e&&e.value);return e&&e.value!==""&&isFinite(v)?v:53};
+const mtMin=()=>{const e=$("mtmin"),v=Number(e&&e.value);return e&&e.value!==""&&isFinite(v)?v:11};
+const mtRise=()=>{const e=$("mtrise"),v=Number(e&&e.value);return e&&e.value!==""&&isFinite(v)?v:2};
+const tolOf=()=>{const e=$("rise");const v=Number(e&&e.value);return e&&e.value!==""&&isFinite(v)?v:1}; // points a losing digit may rise (last 100 vs 1000 ticks) and still count as not growing
+// Strong = 80%+ win rate, each losing digit under 10% over the window, and the losing digits shrinking (growth above 0)
+const isStrong=x=>x.ok;
+/* Signal strength from the digit rules: all three met = Strong, two = Average, one = Weak */
+const sig=x=>{const n=x.kind==="eo"||x.kind==="mt"||x.kind==="ai"?x.parts.filter(Boolean).length:(x.lossMax<10?1:0)+(x.lossGrow<=tolOf()?1:0)+(x.winUp>=3?1:0);return isStrong(x)?["Strong","good"]:n===2?["Average","warn"]:n===1?["Weak",""]:["None","neg"]};
+const ranked=()=>MK.map(m=>stats(m[0])).filter(Boolean).sort((a,b)=>(isStrong(b)-isStrong(a))||(b.rec-a.rec));
+const EP=["wss://api.derivws.com/trading/v1/options/ws/public","wss://ws.derivws.com/websockets/v3?app_id=1089"];
+let ep=0,got=0,ws;
+let lastFast=0;
+function fast(){const t=Date.now();if(t-lastFast>150){lastFast=t;draw();drawDigits()}}
+function feed(){
+  got=0;const me=ws=new WebSocket(EP[ep%EP.length]);
+  me.onopen=()=>ids.forEach((s,i)=>me.send(JSON.stringify({ticks_history:s,end:"latest",count:1000,style:"ticks",subscribe:1,req_id:i+1})));
+  me.onmessage=e=>{const m=JSON.parse(e.data);if(m.error)return;
+    const s=(m.echo_req&&m.echo_req.ticks_history)||(m.tick&&(m.tick.symbol||m.tick.underlying_symbol))||ids[(m.req_id||0)-1];
+    const pip=m.pip_size??(m.tick&&m.tick.pip_size)??PIP[s]??2;
+    if(m.history&&D[s]){got++;D[s]=m.history.prices.map(p=>digit(p,pip));fast()}
+    else if(m.tick&&D[s]){const a=D[s];a.push(digit(m.tick.quote,pip));if(a.length>1000)a.shift()}
+    fast()};
+  me.onclose=()=>{if(me===ws){ep++;setTimeout(feed,1500)}};
+  setTimeout(()=>{if(me===ws&&!got)me.close()},8000);
+}
+feed();
+/* ---------- DBot XML builder (same block format as the bot that imported) ---------- */
+let _n=0;const bid=()=>"b"+(++_n);
+const VN=[..."0123456789".split("").flatMap(k=>["CA"+k,"CR"+k]),"WinUp","SignalOK","PrevOK","RiseLimit","Barrier","MaxStake","Stake","InitialStake","Multiplier","Losses","MaxLosses","TakeProfit","StopLoss","State","TriggerDigit","PrevTrigger","LastDigit","Digits","N","i","d","C1","C2","TrigC","Consec","Step","P0","Top","TopC","Below","T1","T2","T3","T1C","T2C","T3C","Cool","Wait","Pend","P1","P2","P3","NewT","Five","Due","Span","HiC","LoC","Run"],V={};VN.forEach((n,i)=>V[n]="v"+(i+1));
+const X={
+  num:n=>`<block type="math_number" id="${bid()}"><field name="NUM">${n}</field></block>`,
+  get:n=>`<block type="variables_get" id="${bid()}"><field name="VAR" id="${V[n]}" variabletype="">${n}</field></block>`,
+  set:(n,v)=>`<block type="variables_set" id="${bid()}"><field name="VAR" id="${V[n]}" variabletype="">${n}</field><value name="VALUE">${v}</value></block>`,
+  chg:n=>`<block type="math_change" id="${bid()}"><field name="VAR" id="${V[n]}" variabletype="">${n}</field><value name="DELTA"><shadow type="math_number"><field name="NUM">1</field></shadow></value></block>`,
+  cmp:(op,a,b)=>`<block type="logic_compare" id="${bid()}"><field name="OP">${op}</field><value name="A">${a}</value><value name="B">${b}</value></block>`,
+  ar:(op,a,b)=>`<block type="math_arithmetic" id="${bid()}"><field name="OP">${op}</field><value name="A">${a}</value><value name="B">${b}</value></block>`,
+  and:(a,b)=>`<block type="logic_operation" id="${bid()}"><field name="OP">AND</field><value name="A">${a}</value><value name="B">${b}</value></block>`,
+  txt:t=>`<block type="text" id="${bid()}"><field name="TEXT">${t}</field></block>`,
+  iff:(c,d,e)=>`<block type="controls_if" id="${bid()}">${e?'<mutation else="1"></mutation>':''}<value name="IF0">${c}</value><statement name="DO0">${d}</statement>${e?`<statement name="ELSE">${e}</statement>`:''}</block>`,
+  chain:bs=>bs.length===1?bs[0]:bs[0].slice(0,-8)+"<next>"+X.chain(bs.slice(1))+"</next></block>"
+};
+X.stakeFor=()=>X.ar("DIVIDE",`<block type="math_round" id="${bid()}"><field name="OP">ROUND</field><value name="NUM">${X.ar("MULTIPLY",X.ar("MULTIPLY",X.get("InitialStake"),X.ar("POWER",X.get("Multiplier"),X.get("Losses"))),X.num(100))}</value></block>`,X.num(100));
+X.notify=(parts,type="info",sound="silent")=>`<block type="notify" id="${bid()}"><field name="NOTIFICATION_TYPE">${type}</field><field name="NOTIFICATION_SOUND">${sound}</field><value name="MESSAGE"><block type="text_join" id="${bid()}"><mutation items="${parts.length}"></mutation>${parts.map((p,i)=>`<value name="ADD${i}">${p}</value>`).join("")}</block></value></block>`;
+Object.assign(X,{
+  or:(a,b)=>`<block type="logic_operation" id="${bid()}"><field name="OP">OR</field><value name="A">${a}</value><value name="B">${b}</value></block>`,
+  digits:()=>`<block type="lastDigitList" id="${bid()}"></block>`,
+  len:l=>`<block type="lists_length" id="${bid()}"><value name="VALUE">${l}</value></block>`,
+  item:(l,at)=>`<block type="lists_getIndex" id="${bid()}"><mutation statement="false" at="true"></mutation><field name="MODE">GET</field><field name="WHERE">FROM_START</field><value name="VALUE">${l}</value><value name="AT">${at}</value></block>`,
+  loop:body=>`<block type="controls_for" id="${bid()}"><field name="VAR" id="${V.i}" variabletype="">i</field><value name="FROM">${X.num(1)}</value><value name="TO">${X.get("N")}</value><value name="BY">${X.num(1)}</value><statement name="DO">${body}</statement></block>`
+});
+/* The bot for one signal: wait for the trigger digit, then the entry digit, then trade until take profit or stop loss. */
+const maxStake=()=>num("sl")>0?num("sl"):1e9; // a single stake never exceeds the stop-loss amount
+function guard(){
+  if(!(Number($("amount").value)>0))return "No amount entered, so the default stake, take profit and stop loss are used. Enter your amount to calculate them: stake 5%, take profit 5%, stop loss 20%.";
+  if(num("stake")<0.35)return "Your stake ("+num("stake").toFixed(2)+") is below Deriv's minimum of 0.35. Enter a bigger amount (the file was still downloaded).";
+  return null;
+}
+X.cap=()=>X.iff(X.cmp("GT",X.get("Stake"),X.get("MaxStake")),X.chain([X.set("Stake",X.get("MaxStake")),X.notify([X.txt("Stake held at the limit of "),X.get("MaxStake"),X.txt(" (the stop-loss amount)")],"warn","silent")]));
+function buildXML(x){
+  _n=0;const fastMkt=x.s.startsWith("1HZ")||x.s.startsWith("JD"),m1=($("m1s")&&$("m1s").value)||"wait";
+  const delayTicks=fastMkt&&m1==="wait"?2:0,dur=fastMkt&&m1==="dur2"?2:1;
+  const lossSecs=Number($("losscool")&&$("losscool").value),lossCoolTicks=x.kind!=="ai"&&isFinite(lossSecs)&&lossSecs>0?Math.ceil(lossSecs/(fastMkt?1:2)):0;
+  const ai=x.kind==="ai",pr=x.kind==="pr",mt=x.kind==="mt",wh=x.kind==="wh",sw=x.kind==="sw",startBar=($("swstart")&&$("swstart").value==="1")?1:2;const recheck=!!($("rck")&&$("rck").checked);const eo=x.kind==="eo",over=!eo&&x.bar===2,A=over?1:7,B=over?2:8,opp=!($("ent")&&$("ent").value==="win"),lo=opp?(over?0:7):(over?3:1),hi=opp?(over?2:9):(over?8:6),P=n=>X.num(num(n));
+  const eq=(n,v)=>X.cmp("EQ",X.get(n),X.num(v)),step=over?1:-1;
+    const eoRun=($("eorun")&&$("eorun").value==="3")?3:2;
+  const sb=()=>ai?[X.set("Barrier",X.num(x.bar)),X.set("Five",X.num(0)),X.set("Run",X.num(0)),X.set("Due",X.num(0)),X.set("Span",X.num(0))]:pr?[X.set("Barrier",X.num(x.grp==="low"?0:8)),X.set("Step",X.num(0)),X.set("P0",X.num(0))]:mt?[X.set("Barrier",X.num(x.digit))]:wh?[X.set("Barrier",X.num(8)),X.set("Step",X.num(0)),X.set("P0",X.num(0))]:eo?[]:[X.set("Barrier",X.num(sw?startBar:x.bar))]; /* recovery stays on the signal barrier: Over 2 for Over markets, Under 7 for Under markets */
+  const init=X.chain([X.set("MaxStake",X.num(maxStake())),X.set("InitialStake",P("stake")),X.set("Multiplier",P("mult")),X.set("MaxLosses",P("maxl")),X.set("TakeProfit",P("tp")),X.set("StopLoss",P("sl")),
+    X.set("Losses",X.num(Math.max(0,Math.floor(num("rec"))||0))),...sb(),X.set("Stake",X.stakeFor()),X.cap(),X.set("State",X.num(0)),X.set("Consec",X.num(0)),X.set("SignalOK",X.num(recheck?0:1)),X.set("TriggerDigit",X.num(-1)),X.set("PrevTrigger",X.num(-1)),X.set("RiseLimit",X.num(tolOf())),X.set("PrevOK",X.num(-1)),X.set("Cool",X.num(0)),X.set("Wait",X.num(0)),X.set("Pend",X.num(0)),X.set("NewT",X.num(0)),X.set("P1",X.num(-1)),X.set("P2",X.num(-1)),X.set("P3",X.num(-1))]);
+  const opts=`<block type="tradeOptions" id="${bid()}"><field name="DURATIONTYPE_LIST">t</field><field name="CURRENCY_LIST">USD</field><value name="DURATION">${X.num(dur)}</value><value name="AMOUNT">${X.get("Stake")}</value>${eo?"":`<value name="PREDICTION">${X.get("Barrier")}</value>`}</block>`;
+  const trade=`<block type="trade" id="trade" x="0" y="0"><field name="MARKET_LIST">volidx</field><field name="SUBMARKET_LIST">${x.s.startsWith("JD")?"jump_index":"random_index"}</field><field name="SYMBOL_LIST">${x.s}</field><field name="TRADETYPECAT_LIST">digits</field><field name="TRADETYPE_LIST">${eo?"evenodd":mt?"matchesdiffers":"overunder"}</field><field name="TYPE_LIST">${mt?"DIGITMATCH":"both"}</field><field name="CANDLEINTERVAL_LIST">60</field><field name="TIME_MACHINE_ENABLED">FALSE</field><field name="RESTARTONERROR">TRUE</field><statement name="INITIALIZATION">${init}</statement><statement name="SUBMARKET">${opts}</statement></block>`;
+  /* before purchase: every tick the bot re-measures the losing digits. State 0 = wait for trigger digit, 1 = wait for entry digit, 2 = trading.
+     New entries and every trade need SignalOK: each losing digit under 10% over 1000 ticks and not rising faster than the rise limit. */
+  const L=mt||pr?[0]:wh?[0,1,8,9]:eo?(x.side==="Even"?[1,3,5,7,9]:[0,2,4,6,8]):(over?[0,1,2]:[7,8,9]),W=mt||pr?[1]:wh?[2,3,4,5,6,7]:eo?x.wd:(over?[3,4,5,6,7,8,9]:[0,1,2,3,4,5,6]),r100=()=>X.ar("MINUS",X.get("N"),X.num(100));
+  /* binary decision tree: finds the digit's counter in about 4 comparisons instead of 10 */
+  const tree=(pre,lo,hi)=>{if(lo===hi)return X.chg(pre+lo);const m=Math.floor((lo+hi)/2);return X.iff(X.cmp("LTE",X.get("d"),X.num(m)),tree(pre,lo,m),tree(pre,m+1,hi))};
+  const scanLoop=X.loop(X.chain([X.set("d",X.item(X.get("Digits"),X.get("i"))),tree("CA",0,9),X.iff(X.cmp("GT",X.get("i"),r100()),tree("CR",0,9))]));
+  const pAll=k=>X.ar("DIVIDE",X.ar("MULTIPLY",X.get("CA"+k),X.num(100)),X.get("N"));
+  const grow=k=>X.ar("MINUS",X.get("CR"+k),pAll(k));
+  const clear=k=>X.and(X.cmp("LT",pAll(k),X.num(10)),X.cmp("LTE",grow(k),X.get("RiseLimit")));
+  const winUp=k=>X.cmp("GTE",pAll(k),X.num(10.5));
+  const D10=[0,1,2,3,4,5,6,7,8,9];
+  const clear103=k=>X.cmp("LT",pAll(k),X.num(10.3));
+  const belowSet=[X.set("Below",X.num(0)),...L.map(k=>X.iff(X.cmp("LT",pAll(k),X.num(10)),X.chg("Below")))];
+  const topSet=[X.set("T1C",X.num(-1)),X.set("T1",X.num(-1)),...D10.map(k=>X.iff(X.cmp("GT",X.get("CA"+k),X.get("T1C")),X.chain([X.set("T1C",X.get("CA"+k)),X.set("T1",X.num(k))]))),
+    X.set("T2C",X.num(-1)),X.set("T2",X.num(-1)),...D10.map(k=>X.iff(X.and(X.cmp("NEQ",X.num(k),X.get("T1")),X.cmp("GT",X.get("CA"+k),X.get("T2C"))),X.chain([X.set("T2C",X.get("CA"+k)),X.set("T2",X.num(k))]))),
+    X.set("T3C",X.num(-1)),X.set("T3",X.num(-1)),...D10.map(k=>X.iff(X.and(X.and(X.cmp("NEQ",X.num(k),X.get("T1")),X.cmp("NEQ",X.num(k),X.get("T2"))),X.cmp("GT",X.get("CA"+k),X.get("T3C"))),X.chain([X.set("T3C",X.get("CA"+k)),X.set("T3",X.num(k))])))];
+  const inW=v=>W.map(w=>X.cmp("EQ",X.get(v),X.num(w))).reduce((p,q)=>X.or(p,q));
+  const topOk=i=>X.and(inW("T"+i),X.cmp("GTE",X.ar("DIVIDE",X.ar("MULTIPLY",X.get("T"+i+"C"),X.num(100)),X.get("N")),X.num(10.5)));
+  const eoCond=X.and(X.and(L.map(clear103).reduce((p,q)=>X.and(p,q)),X.cmp("GTE",X.get("Below"),X.num(3))),X.and(X.and(topOk(1),topOk(2)),X.and(topOk(3),X.cmp("GTE",X.get("N"),X.num(500)))));
+  const scan=[...[0,1,2,3,4,5,6,7,8,9].flatMap(k=>[X.set("CA"+k,X.num(0)),X.set("CR"+k,X.num(0))]),scanLoop,
+    ...(eo?[...belowSet,...topSet]:[]),
+    ...(wh||eo?[]:[X.set("WinUp",X.num(0)),...W.map(k=>X.iff(winUp(k),X.chg("WinUp")))]),
+    X.set("SignalOK",X.num(0)),X.iff(eo?eoCond:X.and(L.map(clear).reduce((p,q)=>X.and(p,q)),wh?X.cmp("GTE",X.get("N"),X.num(500)):X.and(X.cmp("GTE",X.get("WinUp"),X.num(3)),X.cmp("GTE",X.get("N"),X.num(500)))),X.set("SignalOK",X.num(1))),
+    X.iff(X.cmp("NEQ",X.get("SignalOK"),X.get("PrevOK")),X.chain([X.set("PrevOK",X.get("SignalOK")),
+      X.iff(eq("SignalOK",1),X.notify([X.txt(eo?`THE GUARDIAN conditions clear: top 3 digits are winning-side digits at 10.5%+, losing digits under 10.3% (3+ under 10%) - trading allowed`:wh?`Whip conditions clear: digits ${L.join(", ")} all below 10% and not rising - trading allowed`:`Signal conditions clear: losing digits ${L.join(", ")} below 10% and not rising, and 3+ winning digits at 10.5%+ - trading allowed`)],"success","silent")),
+      X.iff(eq("SignalOK",0),X.notify([X.txt(eo?`THE GUARDIAN conditions NOT met (top 3 digits must be winning-side at 10.5%+; losing digits under 10.3%, 3+ under 10%) - no new entries until they are`:wh?`Whip conditions NOT met (digits ${L.join(", ")} must stay below 10% and not rise) - no new entries until they are`:`Signal conditions NOT met (losing digits ${L.join(", ")} must stay below 10% and not rise; 3+ winning digits must be at 10.5%+) - no new trades until they are`)],"warn","silent"))]))];
+  const okNow=()=>eq("SignalOK",1);
+  /* NewT = 1 only when a genuinely new tick has arrived: the last three digits have shifted by one place */
+  const itemAt=k=>X.item(X.get("Digits"),X.ar("MINUS",X.get("N"),X.num(k)));
+  const nt=[X.set("NewT",X.num(0)),X.iff(X.cmp("GT",X.get("N"),X.num(4)),X.chain([
+    X.iff(X.and(X.and(X.cmp("EQ",itemAt(1),X.get("P1")),X.cmp("EQ",itemAt(2),X.get("P2"))),X.cmp("EQ",itemAt(3),X.get("P3"))),X.set("NewT",X.num(1))),
+    X.set("P1",X.get("LastDigit")),X.set("P2",itemAt(1)),X.set("P3",itemAt(2))]))];
+  const tick2=[...nt,X.iff(eq("NewT",1),X.chain([X.iff(X.cmp("GT",X.get("Cool"),X.num(0)),X.set("Cool",X.ar("MINUS",X.get("Cool"),X.num(1)))),X.iff(X.cmp("GT",X.get("Wait"),X.num(0)),X.set("Wait",X.ar("MINUS",X.get("Wait"),X.num(1))))]))];
+  const entryOU=X.iff(X.and(eq("State",1),okNow()),X.iff(eo?W.map(w=>eq("LastDigit",w)).reduce((p,q)=>X.or(p,q)):X.and(X.cmp("GTE",X.get("LastDigit"),X.num(lo)),X.cmp("LTE",X.get("LastDigit"),X.num(hi))),
+    X.chain([X.set("State",X.num(2)),X.set("Wait",X.num(delayTicks)),X.notify([X.txt("Entry digit "),X.get("LastDigit"),X.txt(" touched - trading until take profit or stop loss")],"success","silent")])));
+  const loserTest=()=>L.map(l=>eq("LastDigit",l)).reduce((p,q)=>X.or(p,q));
+  const entryEO=X.iff(X.and(eq("State",1),okNow()),X.chain([
+    X.iff(loserTest(),X.chg("Consec"),X.set("Consec",X.num(0))),
+    X.iff(X.cmp("GTE",X.get("Consec"),X.num(eoRun)),X.chain([X.set("State",X.num(3)),X.notify([X.txt(`${eoRun} losing-side digits in a row - waiting for one winning-side confirmation digit`)],"info","silent")]))]));
+  const winTest=()=>W.map(w=>eq("LastDigit",w)).reduce((p,q)=>X.or(p,q));
+  const confirmEO=X.iff(X.and(eq("State",3),okNow()),X.iff(winTest(),X.chain([X.set("State",X.num(2)),X.set("Wait",X.num(delayTicks)),X.notify([X.txt("Confirmation digit "),X.get("LastDigit"),X.txt(` from the winning side - trading ${x.side} until take profit or stop loss`)],"success","silent")])));
+  const entry=eo?entryEO:entryOU;
+  const entryTxt=sw?`trading right away (Over ${startBar}, switching Over 1 / Over 2 after each loss)`:eo?`${eoRun} losing-side digits in a row (${L.join(", ")}), then one winning-side confirmation digit`:`an entry digit ${lo}-${hi}`,trigTxt=eo?`least-appearing winning-side digit, of ${W.join(", ")}`:`least appearing of ${A} and ${B}`;
+  const trigHead=eo?[X.set("TrigC",X.get("CA"+W[0])),X.set("TriggerDigit",X.num(W[0])),...W.slice(1).map(k=>X.iff(X.cmp("LT",X.get("CA"+k),X.get("TrigC")),X.chain([X.set("TrigC",X.get("CA"+k)),X.set("TriggerDigit",X.num(k))])))]:[...(recheck?[X.set("C1",X.get("CA"+A)),X.set("C2",X.get("CA"+B))]:[X.set("C1",X.num(0)),X.set("C2",X.num(0)),X.loop(X.chain([X.set("d",X.item(X.get("Digits"),X.get("i"))),X.iff(eq("d",A),X.chg("C1")),X.iff(eq("d",B),X.chg("C2"))]))]),X.set("TriggerDigit",X.num(B)),X.iff(X.cmp("LTE",X.get("C1"),X.get("C2")),X.set("TriggerDigit",X.num(A)))];
+  const cntAll=[...[0,1,2,3,4,5,6,7,8,9].map(k=>X.set("CA"+k,X.num(0))),X.loop(X.chain([X.set("d",X.item(X.get("Digits"),X.get("i"))),tree("CA",0,9)]))];
+  const trig=X.chain([...(eo&&!recheck?cntAll:[]),...trigHead,
+    X.iff(X.cmp("NEQ",X.get("TriggerDigit"),X.get("PrevTrigger")),X.chain([X.set("PrevTrigger",X.get("TriggerDigit")),
+      X.notify([X.txt(`${x.side}: trigger digit is `),X.get("TriggerDigit"),X.txt(` (${trigTxt} over the last 1000 ticks). Waiting for it, then ${entryTxt}`)],"info","silent")])),
+    X.iff(X.and(X.cmp("EQ",X.get("LastDigit"),X.get("TriggerDigit")),okNow()),X.chain([X.set("State",X.num(sw?2:1)),X.set("Consec",X.num(0)),X.set("Wait",X.num(sw?delayTicks:0)),X.notify([X.txt("Trigger digit "),X.get("LastDigit"),X.txt(` hit - waiting for ${entryTxt}`)],"info","silent")]))]);
+  const buy=X.iff(X.and(X.and(eq("State",2),okNow()),eq("Wait",0)),`<block type="purchase" id="${bid()}"><field name="PURCHASE_LIST">${eo?(x.side==="Even"?"DIGITEVEN":"DIGITODD"):(over?"DIGITOVER":"DIGITUNDER")}</field></block>`);
+  const before=`<block type="before_purchase" id="strategy" x="700" y="0"><statement name="BEFOREPURCHASE_STACK">${X.chain([
+    X.set("Digits",X.digits()),X.set("N",X.len(X.get("Digits"))),X.set("LastDigit",X.item(X.get("Digits"),X.get("N"))),...tick2,...(recheck?scan:[]),X.iff(eq("Cool",0),X.chain([X.iff(eq("NewT",1),X.chain([entry,...(eo?[confirmEO]:[]),X.iff(eq("State",0),trig)])),buy]))])}</statement></block>`;
+  const tp=()=>`<block type="total_profit" id="${bid()}"></block>`;
+  const res=`<block type="contract_check_result" id="${bid()}"><field name="CHECK_RESULT">win</field></block>`;
+  const count=X.iff(res,X.chain([X.set("Losses",X.num(0)),X.set("Stake",X.get("InitialStake")),X.cap(),...(sw?[X.set("Barrier",X.num(startBar))]:[]),X.notify([X.txt("WIN! Total P/L "),tp()],"success","earned-money")]),X.chain([X.chg("Losses"),X.set("Stake",X.stakeFor()),X.cap(),...(sw?[X.iff(eq("Barrier",2),X.set("Barrier",X.num(1)),X.set("Barrier",X.num(2)))]:[]),...(lossCoolTicks>0?[X.set("State",X.num(0)),X.set("Consec",X.num(0)),X.set("Cool",X.num(lossCoolTicks))]:[])]));
+  const msg=X.notify([X.txt("Total P/L "),tp(),X.txt(" | losses in a row "),X.get("Losses"),X.txt(" | next stake "),X.get("Stake"),...(eo?[]:[X.txt(" | next barrier "),X.get("Barrier")])]);
+  const maxOk=X.or(X.cmp("EQ",X.get("MaxLosses"),X.num(0)),X.cmp("LT",X.get("Losses"),X.get("MaxLosses")));
+  const cond=X.and(X.and(X.cmp("LT",tp(),X.get("TakeProfit")),X.cmp("GT",tp(),X.ar("MINUS",X.num(0),X.get("StopLoss")))),maxOk);
+  const stopMsgs=X.chain([X.iff(X.cmp("GTE",tp(),X.get("TakeProfit")),X.notify([X.txt("CONGRATULATIONS! TP HIT - bot stopped. Total profit "),tp()],"success","earned-money")),X.iff(X.cmp("LTE",tp(),X.ar("MINUS",X.num(0),X.get("StopLoss"))),X.notify([X.txt("Stop loss reached - bot stopped. Total P/L "),tp()],"error","error")),X.iff(X.and(X.cmp("GT",X.get("MaxLosses"),X.num(0)),X.cmp("GTE",X.get("Losses"),X.get("MaxLosses"))),X.notify([X.txt("Max losses in a row reached - bot stopped")],"warn","error"))]);
+  const after=`<block type="after_purchase" id="finish" x="700" y="300"><statement name="AFTERPURCHASE_STACK">${X.chain([count,...(sw?[]:sb()),msg,X.iff(cond,`<block type="trade_again" id="${bid()}"></block>`,stopMsgs)])}</statement></block>`;
+  let beforeF=before,afterF=after;
+  if(ai){
+    /* THE AUTO TRADE AI: read the last 800 ticks, trade the side that attracted the cursor on every 5th tick for the next 200 ticks, then read again */
+    const pur=t=>`<block type="purchase" id="${bid()}"><field name="PURCHASE_LIST">${t}</field></block>`;
+    const buy=X.iff(eq("Due",1),X.iff(eq("Barrier",4),pur("DIGITOVER"),pur("DIGITUNDER")));
+    /* the losing side is the opposite of the side being traded: digits 0-4 when trading Over 4, digits 5-9 when trading Under 5 */
+    const losingNow=X.or(X.and(eq("Barrier",4),X.cmp("LTE",X.get("LastDigit"),X.num(4))),X.and(eq("Barrier",5),X.cmp("GTE",X.get("LastDigit"),X.num(5))));
+    beforeF=`<block type="before_purchase" id="strategy" x="700" y="0"><statement name="BEFOREPURCHASE_STACK">${X.chain([
+      X.set("Digits",X.digits()),X.set("N",X.len(X.get("Digits"))),X.set("LastDigit",X.item(X.get("Digits"),X.get("N"))),...nt,
+      X.iff(eq("NewT",1),X.chain([X.chg("Span"),X.iff(losingNow,X.chg("Run"),X.set("Run",X.num(0))),X.iff(X.cmp("GTE",X.get("Run"),X.num(3)),X.chain([X.set("Run",X.num(0)),X.set("Due",X.num(1)),X.notify([X.txt("3 consecutive losing-side digits - entering the trade")],"success","silent")]))])),buy])}</statement></block>`;
+    const reread=X.iff(X.cmp("GTE",X.get("Span"),X.num(200)),X.chain([
+      X.set("Digits",X.digits()),X.set("N",X.len(X.get("Digits"))),X.set("HiC",X.num(0)),X.set("LoC",X.num(0)),
+      X.loop(X.chain([X.set("d",X.item(X.get("Digits"),X.get("i"))),X.iff(X.cmp("GT",X.get("i"),X.ar("MINUS",X.get("N"),X.num(800))),X.iff(X.cmp("GTE",X.get("d"),X.num(5)),X.chg("HiC"),X.chg("LoC")))])),
+      X.iff(X.cmp("GT",X.get("HiC"),X.get("LoC")),X.set("Barrier",X.num(4)),X.iff(X.cmp("LT",X.get("HiC"),X.get("LoC")),X.set("Barrier",X.num(5)))),
+      X.set("Span",X.num(0)),X.set("Run",X.num(0)),
+      X.notify([X.txt("AUTO TRADE AI re-read the last 800 ticks: high side "),X.get("HiC"),X.txt(", low side "),X.get("LoC"),X.txt(" - trading the side that attracted the cursor for the next 200 ticks")],"info","silent")]));
+    afterF=`<block type="after_purchase" id="finish" x="700" y="300"><statement name="AFTERPURCHASE_STACK">${X.chain([count,X.set("Due",X.num(0)),reread,msg,X.iff(cond,`<block type="trade_again" id="${bid()}"></block>`,stopMsgs)])}</statement></block>`;
+  }
+  if(mt){
+    /* MATCHES: the digit is fixed when the file is made. The bot trades Matches on it each time the cursor touches it. */
+    const D=x.digit,others=[0,1,2,3,4,5,6,7,8,9].filter(k=>k!==D),andAll=(a)=>a.reduce((p,q)=>X.and(p,q));
+    const topAll=andAll(others.map(k=>X.cmp("GTE",X.get("CA"+D),X.get("CA"+k)))),topRec=andAll(others.map(k=>X.cmp("GTE",X.get("CR"+D),X.get("CR"+k))));
+    const mtOK=X.and(X.and(X.and(X.cmp("GTE",pAll(D),X.num(mtMin())),X.cmp("GTE",grow(D),X.num(mtRise()))),topAll),X.and(topRec,X.cmp("GTE",X.get("N"),X.num(500))));
+    const scanMT=[...[0,1,2,3,4,5,6,7,8,9].flatMap(k=>[X.set("CA"+k,X.num(0)),X.set("CR"+k,X.num(0))]),scanLoop,X.set("SignalOK",X.num(0)),X.iff(mtOK,X.set("SignalOK",X.num(1))),
+      X.iff(X.cmp("NEQ",X.get("SignalOK"),X.get("PrevOK")),X.chain([X.set("PrevOK",X.get("SignalOK")),
+        X.iff(eq("SignalOK",1),X.notify([X.txt(`SIZZLERS conditions clear: digit ${D} is the most touched digit and gaining - trading allowed`)],"success","silent")),
+        X.iff(eq("SignalOK",0),X.notify([X.txt(`SIZZLERS conditions NOT met (digit ${D} must stay the most touched digit and keep gaining) - no new entries until they are`)],"warn","silent"))]))];
+    /* once the digit is touched the bot trades Matches on every tick until take profit or stop loss: fixed stake, no cooldown, no martingale */
+    const pur=`<block type="purchase" id="${bid()}"><field name="PURCHASE_LIST">DIGITMATCH</field></block>`;
+    const hit=X.and(X.and(X.and(eq("State",0),eq("LastDigit",D)),okNow()),eq("NewT",1));
+    const arm=X.iff(hit,X.chain([X.set("State",X.num(2)),X.set("Wait",X.num(delayTicks)),X.notify([X.txt(delayTicks>0?`Digit ${D} touched - waiting 2 ticks, then Matches ${D} on every tick`:`Digit ${D} touched - buying Matches ${D} on every tick until take profit or stop loss`)],"success","silent")]));
+    const run=X.iff(X.and(X.and(eq("State",2),okNow()),eq("Wait",0)),pur);
+    beforeF=`<block type="before_purchase" id="strategy" x="700" y="0"><statement name="BEFOREPURCHASE_STACK">${X.chain([
+      X.set("Digits",X.digits()),X.set("N",X.len(X.get("Digits"))),X.set("LastDigit",X.item(X.get("Digits"),X.get("N"))),...tick2,...(recheck?scanMT:[]),arm,run])}</statement></block>`;
+    const countMT=X.iff(res,X.chain([X.set("Losses",X.num(0)),X.notify([X.txt("WIN! Total P/L "),tp()],"success","earned-money")]),X.chg("Losses"));
+    afterF=`<block type="after_purchase" id="finish" x="700" y="300"><statement name="AFTERPURCHASE_STACK">${X.chain([countMT,msg,X.iff(cond,`<block type="trade_again" id="${bid()}"></block>`,stopMsgs)])}</statement></block>`;
+  }
+  const vars=VN.map(n=>`<variable type="" id="${V[n]}">${n}</variable>`).join("");
+  return `<xml xmlns="http://www.w3.org/1999/xhtml" collection="false"><variables>${vars}</variables>${trade}${beforeF}${afterF}<block type="during_purchase" id="during" x="700" y="900"></block></xml>`;
+}
+function download(x){if(!x||x.kind!==botType())return;recalc();const gm=guard();if(gm)$("how").textContent=gm;
+  const blob=new Blob([buildXML(x)],{type:"application/xml"}),a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download=`dbot_${x.s}_${x.kind==="ai"?"AutoTradeAI_"+x.side.replace(" ",""):x.kind==="mt"?"Sizzlers"+x.digit:(x.kind==="eo"?"TheGuardian_":"ProfitTracker_")+x.side.replace(" ","")}.xml`;
+  document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1500);
+}
+/* ---------- UI ---------- */
+let target=null,armed={},focus=null;
+const al=$("alert");
+al.onclick=()=>{if(al._x)download(al._x)};
+$("dl").onclick=()=>{if(!target)return;const x=target.kind===botType()?target:stats(target.s);if(x)download(x)};
+/* While a Strong signal is held the scanner only watches that market. It lets go when the signal stops holding (a losing digit above 10.5% or rising past the limit, fewer than 2 winning digits at 10.5%+, or the side flips). */
+let locked=null,endT,lastSig={k:"",t:0};
+const holds=x=>x&&(x.kind==="ai"?(x.all>=aiMin()-1):x.kind==="mt"?(x.all>=mtMin()-1&&x.g>=0):(x.lossMax<=(x.kind==="eo"?10.8:10.5)&&x.lossGrow<=tolOf()+0.5&&x.winUp>=2));
+function draw(){
+  const cur=$("curm").value;
+  let all=locked?[stats(locked.s)].filter(Boolean):ranked();
+  if(locked&&!(holds(all[0])&&all[0].side===locked.side)){
+    const old=locked;locked=null;armed[old.s]=0;focus=null;all=ranked();
+    al.textContent=`Signal on ${names[old.s]} (${old.side}) has ended. Scanning for a new signal.`;al._x=null;al.style.display="block";
+    clearTimeout(endT);endT=setTimeout(()=>{if(!locked)al.style.display="none"},10000);
+  }else if(locked)locked=all[0];
+  $("rows").innerHTML=all.map(x=>{const [l,c]=sig(x);return `<tr><td>${names[x.s]}</td><td>${x.side}</td><td class="${c}">${Math.round(x.rec)}%</td><td class="${c}">${l}</td><td>${x.g>0?"+":""}${x.g.toFixed(1)}</td><td class="${(x.kind==="ai"||x.kind==="mt"?x.parts[0]&&x.parts[1]:x.kind==="eo"?x.parts[0]&&x.parts[1]:x.lossMax<10&&x.lossGrow<=tolOf())?"good":"neg"}">${x.kind==="ai"?`over 800 ticks: high ${(x.hi/8).toFixed(1)}% / low ${(x.lo/8).toFixed(1)}%`:x.kind==="mt"?`digit ${x.digit}: ${x.all.toFixed(1)}% (${x.g>0?"+":""}${x.g.toFixed(1)})`:`${x.lossMax.toFixed(1)}% ${x.lossGrow<=tolOf()?"&#8595; flat/falling":"&#8593; rising"}`}</td><td class="${(x.kind==="eo"||x.kind==="mt"||x.kind==="ai"?x.parts[2]:x.winUp>=3)?"good":"neg"}">${x.kind==="ai"?`${x.side} attracts the cursor`:x.kind==="mt"?(x.recTop?"leads last 100":"not leading last 100"):x.kind==="eo"?`top 3: ${x.top3} (${x.winUp}/3 winning)`:`${x.winUp}/${x.nw} at 10.5%+`}</td></tr>`}).join("")||`<tr><td colspan=7>Loading ticks...</td></tr>`;
+  const alt=locked||all.find(x=>x.s!==cur)||all[0];
+  if(alt){target=alt;const [l]=sig(alt),strong=isStrong(alt);
+    $("ltxt").textContent=locked?"Signal locked - scanning is paused until this signal ends":strong?"Strong signal ready":`Best available (${l} signal, not all Strong conditions met)`;
+    $("lname").textContent=`${names[alt.s]}: ${alt.side} - ${Math.round(alt.rec)}%`;
+    $("dl").disabled=false;$("dl").textContent=locked||strong?"Download bot for this signal":"Download bot anyway";
+  }else if(!all.length){$("ltxt").textContent="Connecting to Deriv... (open this file in Chrome or Safari)"}
+  if(!locked)for(const x of all){const r=Math.round(x.rec);
+    if(isStrong(x)){if(!armed[x.s]&&x.s!==cur){armed[x.s]=1;focus=x;locked=x;$('dig').classList.remove('flash');void $('dig').offsetWidth;$('dig').classList.add('flash');const key=x.s+"|"+x.side,fresh=!(lastSig.k===key&&Date.now()-lastSig.t<60000);lastSig={k:key,t:Date.now()};if(fresh)chime();
+      al.textContent=`Strong signal: ${names[x.s]}, ${x.side}, ${r}%, losing digits at most ${x.lossMax.toFixed(1)}% and not rising, ${x.kind==="ai"?`${x.side} attracted the cursor ${x.all.toFixed(1)}% of the last 800 ticks`:x.kind==="mt"?`most touched digit ${x.digit} at ${x.all.toFixed(1)}%`:`${x.winUp} winning digits at 10.5%+`}. Tap here to download the bot. Scanning is paused until this signal ends.`;al._x=x;al.style.display="block";
+      {const gm=guard();if(gm)al.textContent+=" "+gm;if(fresh&&$("auto").checked)download(x)}
+      try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(e){}
+      break}}else if(x.kind==="ai"?(x.all<aiMin()-1):x.kind==="mt"?(x.all<mtMin()-1||x.g<0):(x.lossMax>(x.kind==="eo"?10.8:10.5)||x.winUp<2))armed[x.s]=0}
+}
+$("am").innerHTML='<option value="auto">Auto (follows the signal)</option>'+MK.map(([s,n])=>`<option value="${s}">${n}</option>`).join("");
+function drawDigits(){
+  const auto=$("am").value==="auto",m=auto?(focus?focus.s:(target?target.s:"R_100")):$("am").value,st=stats(m),a=(D[m]||[]).slice(-Number($("an").value));
+  const cnt=Array(10).fill(0);a.forEach(d=>cnt[d]++);
+  const p=cnt.map(v=>a.length?100*v/a.length:0),ord=[...p.keys()].sort((x,y)=>p[y]-p[x]||x-y),cls={};
+  if(a.length){cls[ord[0]]="hi";cls[ord[1]]="hi2";cls[ord[8]]="lo2";cls[ord[9]]="lo"}
+  const last=a.length?a[a.length-1]:null;
+  $("ld").textContent=last===null?"-":last;$("ld").style.borderColor=last===null?"":last>2?"var(--good)":"#c0392b";
+  $("dtitle").textContent=st?`${auto&&focus?"Signal: ":""}${names[m]} - ${st.side} - ${Math.round(st.rec)}%`:names[m];
+  const win=d=>st&&st.wd.includes(d);
+  $("circles").innerHTML=p.map((v,d)=>`<div class="c ${cls[d]||""} ${win(d)?"w":""} ${d===last?"cur":""}"><b>${d}</b><span>${a.length?v.toFixed(1)+"%":"-"}</span></div>`).join("");
+  const eoMode=botType()==='eo',o=a.length?100*a.filter(eoMode?(d=>d%2===0):(d=>d>2)).length/a.length:0,u=a.length?100*a.filter(eoMode?(d=>d%2===1):(d=>d<7)).length/a.length:0;
+  $("ou").textContent=a.length?`${names[m]}, last ${a.length} ticks: ${eoMode?'Even':'Over 2'} wins ${o.toFixed(1)}% | ${eoMode?'Odd':'Under 7'} wins ${u.toFixed(1)}%. Shaded circles are the winning digits for the signal side.`:"Waiting for ticks...";
+}
+const setMode=()=>{const t=botType();$("mt").textContent=t==="eo"?"THE GUARDIAN only.":t==="mt"?"SIZZLERS only (most touched digit).":t==="ai"?"THE AUTO TRADE AI only (Over 4 / Under 5).":"PROFIT TRACKER only."};setMode();
+$("bt").onchange=()=>{locked=null;focus=null;armed={};target=null;al.style.display="none";al._x=null;$("dl").disabled=true;$("rows").innerHTML="";setMode();try{localStorage.setItem("sl_bt",$("bt").value)}catch(e){}};
+setInterval(()=>{draw();drawDigits()},400);
+</script>
+</body>
+</html>
